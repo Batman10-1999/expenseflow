@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Expense Tracker</title>
+
+<link rel="stylesheet" href="style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+</head>
+
+<body>
+
+
+<!-- HEADER -->
+
+<div class="header-bar">
+
+<div class="header-date" id="liveDate"></div>
+
+<div class="header-title">Expense Tracker</div>
+
+<div class="header-time-box">
+<select id="timezoneSelect"></select>
+<span id="liveTime"></span>
+</div>
+
+</div>
+
+
+
+<!-- TABS -->
+
+<div class="tabs">
+
+<div class="tab active" onclick="showSection('spending', this)">Spending</div>
+
+<div class="tab" onclick="showSection('calendar', this)">Calendar</div>
+
+<div class="tab" onclick="showSection('analytics', this)">Analytics</div>
+
+</div>
+
+
+
+<!-- ================= SPENDING ================= -->
+
+<div id="spending" class="section active-section">
+
+
+<!-- TOP SUMMARY BAR -->
+<div class="summary-row">
+
+
+<div class="budget-block">
+Budget :     ₹
+<input type="number" id="budgetInput">
+<button onclick="saveBudget()">Save</button>
+</div>
+
+<div class="remaining-block">
+Remaining : ₹ <span id="remainingAmount">0</span>
+
+<div class="progress-container">
+<div class="progress-bar" id="budgetProgress"></div>
+</div>
+
+<div class="progress-label" id="progressLabel"></div>
+</div>
+
+<div class="total-block">
+Total Spending : ₹ <span id="totalAmount" class="gold-amount">0</span>
+</div>
+
+</div>
+
+<div class="today-overview">
+
+    <div class="today-main">
+        <span class="overview-label">Selected Day Spending</span>
+        <strong>₹ <span id="todaySpentAmount">0.00</span></strong>
+        <small id="todayExpenseCount">0 expenses</small>
+    </div>
+
+    <div class="overview-item">
+        <span>UPI</span>
+        <strong>₹ <span id="todayUpiAmount">0.00</span></strong>
+    </div>
+
+    <div class="overview-item">
+        <span>Cash</span>
+        <strong>₹ <span id="todayCashAmount">0.00</span></strong>
+    </div>
+
+    <div class="overview-item">
+        <span>Card</span>
+        <strong>₹ <span id="todayCardAmount">0.00</span></strong>
+    </div>
+
+</div>
+
+<!-- INPUT ROW -->
+
+<div class="expense-entry-card">
+
+    <div class="entry-header">
+        <div>
+            <h2>Add Expense</h2>
+            <p id="selectedDateLabel">Adding expense for today</p>
+        </div>
+    </div>
+
+    <div class="quick-category-row">
+        <span class="quick-label">Quick Category</span>
+
+        <button type="button" onclick="selectQuickCategory('Food')">
+            Food
+        </button>
+
+        <button type="button" onclick="selectQuickCategory('Transport')">
+            Transport
+        </button>
+
+        <button type="button" onclick="selectQuickCategory('Shopping')">
+            Shopping
+        </button>
+
+        <button type="button" onclick="selectQuickCategory('Bills')">
+            Bills
+        </button>
+
+        <button type="button" onclick="selectQuickCategory('Health')">
+            Health
+        </button>
+
+        <button onclick="selectQuickCategory('Other')">
+            Other
+        </button>
+    </div>
+
+
+
+    <div class="expense-form">
+
+        <div class="form-field description-field">
+            <label for="description">Description</label>
+            <input
+                type="text"
+                id="description"
+                placeholder="What did you spend on?"
+                autocomplete="off"
+            >
+        </div>
+
+        <div class="form-field">
+            <label for="amount">Amount</label>
+            <input
+                type="number"
+                id="amount"
+                placeholder="₹ 0.00"
+                min="0"
+                step="0.01"
+            >
+        </div>
+
+        <div class="form-field">
+            <label for="category">Category</label>
+
+            <select id="category" onchange="handleCategoryChange()">
+                <option value="">Select Category</option>
+                <option value="Food">Food</option>
+                <option value="Transport">Transport</option>
+                <option value="Shopping">Shopping</option>
+                <option value="Bills">Bills</option>
+                <option value="Health">Health</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+
+        <div class="form-field">
+            <label for="paymentMethod">Payment Method</label>
+
+            <select id="paymentMethod">
+                <option value="">Select Payment</option>
+                <option value="UPI">UPI</option>
+                <option value="Cash">Cash</option>
+                <option value="Card">Card</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+
+        <div class="form-field custom-category-field" id="customCategoryField">
+            <label for="customCategory">Custom Category</label>
+
+            <input
+                type="text"
+                id="customCategory"
+                placeholder="Enter category"
+            >
+        </div>
+
+        <div class="form-action">
+            <button type="button" onclick="addExpense()" class="add-expense-btn">
+                Add Expense
+            </button>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- SEARCH -->
+
+<div class="history-toolbar">
+
+    <div class="history-title">
+        Expense History
+    </div>
+
+    <input
+        type="text"
+        id="searchExpense"
+        placeholder="Search expenses..."
+        onkeyup="filterExpenses()"
+    >
+
+</div>
+
+
+<!-- CATEGORY FILTER -->
+
+<div class="filter-bar">
+
+<button onclick="filterCategory('All')">All</button>
+
+<button onclick="filterCategory('Food')">Food</button>
+
+<button onclick="filterCategory('Transport')">Transport</button>
+
+<button onclick="filterCategory('Shopping')">Shopping</button>
+
+<button onclick="filterCategory('Bills')">Bills</button>
+
+<button onclick="filterCategory('Health')">Health</button>
+
+<button onclick="filterCategory('Other')">Other</button>
+
+</div>
+
+
+<ul id="expenseList"></ul>
+
+
+</div>
+
+
+
+<!-- ================= CALENDAR ================= -->
+
+<div id="calendar" class="section">
+
+
+<div class="calendar-controls">
+
+<select id="yearSelect"></select>
+
+<select id="monthSelect"></select>
+
+</div>
+
+
+<div id="calendarGrid" class="calendar-grid"></div>
+
+
+<div class="monthly-box">
+
+Monthly Expense : ₹ <span id="monthlyTotal">0</span>
+
+</div>
+
+
+
+<div class="month-summary">
+
+<h3>Month Summary</h3>
+
+
+<div class="summary-grid">
+
+
+<div class="summary-box">
+
+<span>Total Spending</span>
+
+<strong>₹ <span id="summaryTotal">0</span></strong>
+
+</div>
+
+
+<div class="summary-box">
+
+<span>Highest Day</span>
+
+<strong id="summaryHighest">₹0</strong>
+
+</div>
+
+
+<div class="summary-box">
+
+<span>Average per Day</span>
+
+<strong>₹ <span id="summaryAverage">0</span></strong>
+
+</div>
+
+
+<div class="summary-box">
+
+<span>Budget Status</span>
+
+<strong id="summaryBudget">OK</strong>
+
+</div>
+
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<!-- ================= ANALYTICS ================= -->
+
+<div id="analytics" class="section">
+
+    <div class="analytics-container">
+
+        <!-- ANALYTICS CHART -->
+
+        <div class="chart-box analytics-chart-box">
+
+            <div class="analytics-header">
+
+                <div>
+                    <h2>Analytics</h2>
+                    <p>Explore your spending patterns</p>
+                </div>
+
+                <select
+                    id="analyticsSelector"
+                    onchange="changeAnalyticsView()">
+
+                    <option value="category">
+                        Category Distribution
+                    </option>
+
+                    <option value="daily">
+                        Daily Spending
+                    </option>
+
+                    <option value="payment">
+                        Payment Methods
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="analytics-chart-area">
+
+                <div
+                    id="categoryChartBox"
+                    class="analytics-view">
+
+                    <canvas id="pieChart"></canvas>
+
+                </div>
+
+
+                <div
+                    id="dailyChartBox"
+                    class="analytics-view">
+
+                    <canvas id="barChart"></canvas>
+
+                </div>
+
+
+                <div
+                    id="paymentChartBox"
+                    class="analytics-view">
+
+                    <canvas id="paymentChart"></canvas>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- SMART INSIGHTS -->
+
+        <div class="insights-box">
+
+            <h3>Smart Insights</h3>
+
+            <div class="insight-item">
+                Top Category:
+                <span id="insightCategory">-</span>
+            </div>
+
+            <div class="insight-item">
+                Highest Day:
+                <span id="insightHighestDay">-</span>
+            </div>
+
+            <div class="insight-item">
+                Average Daily Spend:
+                <span id="insightAverage">-</span>
+            </div>
+
+            <div class="insight-item">
+                Largest Expense:
+                <span id="insightLargest">-</span>
+            </div>
+
+            <div class="insight-item">
+                Smart Insight:
+                <span id="insightMessage">-</span>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+
+
+
+<!-- ================= DAY POPUP ================= -->
+
+<div id="dayPopup" class="day-popup">
+
+
+<div class="popup-box">
+
+
+<div class="popup-header">
+
+<span id="popupDate"></span>
+
+<button onclick="closeDayPopup()">✕</button>
+
+</div>
+
+
+<ul id="popupExpenseList"></ul>
+
+
+<div class="popup-total">
+
+Total: ₹ <span id="popupTotal">0</span>
+
+</div>
+
+
+</div>
+
+</div>
+
+
+
+<script src="script.js"></script>
+
+</body>
+</html>
